@@ -613,7 +613,7 @@ func (p ProcessorVoltage) String() string {
 	if p&ProcessorVoltageLegacy == 0 {
 		return voltages[p]
 	}
-	return fmt.Sprintf("%.1f", (p-0x80)/10)
+	return fmt.Sprintf("%.1fV", float32(p-0x80)/10)
 }
 
 type ProcessorStatus byte
@@ -629,16 +629,24 @@ const (
 )
 
 func (p ProcessorStatus) String() string {
+	// Bits 2:0
 	status := [...]string{
-		"Unknown",
+		"Unknown", // 0
 		"CPU Enabled",
 		"Disabled By User through BIOS Setup",
 		"Disabled By BIOSa(POST Error)",
 		"CPU is Idle, waiting to be enabled",
 		"Reserved",
+		"Reserved",
 		"Other",
 	}
-	return status[p]
+	var ret string
+	ret += "Bits 2:0 : " + status[p&0x07]
+
+	if p&0x40 != 0 {
+		ret += "\n Bit 6: CPU Socket Polulated \n "
+	}
+	return ret
 }
 
 type ProcessorUpgrade byte
@@ -689,10 +697,23 @@ const (
 	ProcessorUpgradeSocketFM2
 	ProcessorUpgradeSocketLGA2011_3
 	ProcessorUpgradeSocketLGA1356_3
+	ProcessorUpgradeSocketLGA1150
+	ProcessorUpgradeSocketBGA1168
+	ProcessorUpgradeSocketBGA1234
+	ProcessorUpgradeSocketBGA1364
+	ProcessorUpgradeSocketAM4
+	ProcessorUpgradeSocketLGA1151
+	ProcessorUpgradeSocketBGA1356
+	ProcessorUpgradeSocketBGA1440
+	ProcessorUpgradeSocketBGA1515
+	ProcessorUpgradeSocketLGA3647_1
+	ProcessorUpgradeSocketSP3
+	ProcessorUpgradeSocketSP3r2
 )
 
 func (p ProcessorUpgrade) String() string {
 	upgrades := [...]string{
+		"THIS SHOULD NOT BE SEEN",
 		"Other",
 		"Unknown",
 		"Daughter Board",
@@ -737,6 +758,18 @@ func (p ProcessorUpgrade) String() string {
 		"Socket FM2",
 		"Socket LGA2011-3",
 		"Socket LGA1356-3",
+		"Socket LGA1150",
+		"Socket BGA1168",
+		"Socket BGA1234",
+		"Socket BGA1364",
+		"Socket AM4",
+		"Socket LGA1151",
+		"Socket BGA1356",
+		"Socket BGA1440",
+		"Socket BGA1515",
+		"Socket LGA3647-1",
+		"Socket SP3",
+		"Socket SP3r2",
 	}
 	return upgrades[p]
 }
@@ -764,8 +797,15 @@ func (p ProcessorCharacteristics) String() string {
 		"Execute Protection",
 		"Enhanced Virtualization",
 		"Power/Performance Control",
+		// Bits 8:15 reserved
 	}
-	return chars[p]
+	var s string
+	for i := uint(0); i < 8; i++ {
+		if p&(1<<i) != 0 {
+			s += "\n\t\t" + chars[i]
+		}
+	}
+	return s
 }
 
 // type 4
@@ -802,17 +842,17 @@ func (p ProcessorInformation) String() string {
 		"\tProcessor Type: %s\n"+
 		"\tFamily: %s\n"+
 		"\tManufacturer: %s\n"+
-		"\tID: %s\n"+
+		"\tID: %x\n"+
 		"\tVersion: %s\n"+
 		"\tVoltage: %s\n"+
-		"\tExternal Clock: %d\n"+
-		"\tMax Speed: %d\n"+
-		"\tCurrent Speed: %d\n"+
+		"\tExternal Clock: %d MHz\n"+
+		"\tMax Speed: %d MHz\n"+
+		"\tCurrent Speed: %d MHz\n"+
 		"\tStatus: %s\n"+
 		"\tUpgrade: %s\n"+
-		"\tL1 Cache Handle: %d\n"+
-		"\tL2 Cache Handle: %d\n"+
-		"\tL3 Cache Handle: %d\n"+
+		"\tL1 Cache Handle: %#x\n"+
+		"\tL2 Cache Handle: %#x\n"+
+		"\tL3 Cache Handle: %#x\n"+
 		"\tSerial Number: %s\n"+
 		"\tAsset Tag: %s\n"+
 		"\tPart Number: %s\n"+
@@ -853,8 +893,8 @@ func newProcessorInformation(h dmiHeader) dmiTyper {
 		ProcessorType:     ProcessorType(data[0x05]),
 		Family:            ProcessorFamily(data[0x06]),
 		Manufacturer:      h.FieldString(int(data[0x07])),
-		// TODO:
-		//pi.ProcessorID
+		// TODO: ID print as 0x little-endian
+		ID:              ProcessorID(u64(data[0x08:0x10])),
 		Version:         h.FieldString(int(data[0x10])),
 		Voltage:         ProcessorVoltage(data[0x11]),
 		ExternalClock:   u16(data[0x12:0x14]),

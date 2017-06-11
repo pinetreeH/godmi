@@ -172,7 +172,7 @@ func (b BIOSRuntimeSize) String() string {
 type BIOSRomSize byte
 
 func (b BIOSRomSize) String() string {
-	return fmt.Sprintf("%d kB", b)
+	return fmt.Sprintf("%d kB", uint(b+1)*64)
 }
 
 type BIOSInformation struct {
@@ -226,7 +226,7 @@ func newBIOSInformation(h dmiHeader) dmiTyper {
 		BIOSVersion:            h.FieldString(int(data[0x05])),
 		StartingAddressSegment: sas,
 		ReleaseDate:            h.FieldString(int(data[0x08])),
-		RomSize:                BIOSRomSize(64 * (data[0x09] + 1)),
+		RomSize:                BIOSRomSize(data[0x09]),
 		RuntimeSize:            BIOSRuntimeSize((uint(0x10000) - uint(sas)) << 4),
 		Characteristics:        BIOSCharacteristics(u64(data[0x0A:0x12])),
 	}

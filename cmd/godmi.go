@@ -11,8 +11,9 @@ package main
 
 import (
 	"fmt"
-	"github.com/ochapman/godmi"
 	"reflect"
+
+	"github.com/pinetreeH/godmi"
 )
 
 func main() {
