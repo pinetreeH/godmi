@@ -8,6 +8,7 @@ package godmi
 
 import (
 	"fmt"
+	"strconv"
 )
 
 type CacheOperationalMode byte
@@ -76,10 +77,10 @@ type CacheConfiguration struct {
 func NewCacheConfiguration(u uint16) CacheConfiguration {
 	var c CacheConfiguration
 	c.Level = CacheLevel(byte(u & 0x7))
-	c.Socketed = (u&0x10 == 1)
+	c.Socketed = CheckBit(uint64(u), 3)
 	c.Location = CacheLocation((u >> 5) & 0x3)
-	c.Enabled = (u&(0x1<<7) == 1)
-	c.Mode = CacheOperationalMode((u >> 8) & 0x7)
+	c.Enabled = CheckBit(uint64(u), 7)
+	c.Mode = CacheOperationalMode((u >> 8) & 0x3)
 	return c
 }
 
@@ -89,7 +90,7 @@ func (c CacheConfiguration) String() string {
 		"\tSocketed: %v\n"+
 		"\tLocation: %s\n"+
 		"\tEnabled: %v\n"+
-		"\tMode:\n\t\t",
+		"\tMode: %s\n\t\t",
 		c.Level,
 		c.Socketed,
 		c.Location,
@@ -125,7 +126,7 @@ func NewCacheSize(u uint16) CacheSize {
 }
 
 func (c CacheSize) String() string {
-	return fmt.Sprintf("%s * %s", c.Size, c.Granularity)
+	return fmt.Sprintf("%d * %s", c.Size, c.Granularity)
 }
 
 type CacheSRAMType uint16
@@ -142,20 +143,50 @@ const (
 )
 
 func (c CacheSRAMType) String() string {
-	types := [...]string{
-		"Other",
-		"Unknown",
-		"Non-Burst",
-		"Burst",
-		"Pipeline Burst",
-		"Synchronous",
-		"Asynchronous",
-		"Reserved",
+	//types := [...]string{
+	//	"Other",
+	//	"Unknown",
+	//	"Non-Burst",
+	//	"Burst",
+	//	"Pipeline Burst",
+	//	"Synchronous",
+	//	"Asynchronous",
+	//	"Reserved",
+	//}
+	var ret string
+	if CheckBit(uint64(c), 0) {
+		ret += "other"
 	}
-	return types[c/2]
+	if CheckBit(uint64(c), 1) {
+		ret += "Unknown"
+	}
+	if CheckBit(uint64(c), 2) {
+		ret += "Non-Burst"
+	}
+	if CheckBit(uint64(c), 3) {
+		ret += "Burst"
+	}
+	if CheckBit(uint64(c), 4) {
+		ret += "Pipeline Burst"
+	}
+	if CheckBit(uint64(c), 5) {
+		ret += "Synchronous"
+	}
+	if CheckBit(uint64(c), 6) {
+		ret += "Asynchronous"
+	}
+	return ret
 }
 
 type CacheSpeed byte
+
+func (s CacheSpeed) String() string {
+	speed := int(s)
+	if speed == 0 {
+		return "Unknown"
+	}
+	return strconv.Itoa(speed)
+}
 
 type CacheErrorCorrectionType byte
 
@@ -222,6 +253,7 @@ const (
 
 func (c CacheAssociativity) String() string {
 	caches := [...]string{
+		"Reserved",
 		"Other",
 		"Unknown",
 		"Direct Mapped",

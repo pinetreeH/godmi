@@ -1,17 +1,87 @@
 /*
 * File Name:	utils.go
-* Description:	
+* Description:
 * Author:	Chapman Ou <ochapman.cn@gmail.com>
 * Created:	2014-08-21
-*/
+ */
 package godmi
 
 import (
+	"bytes"
+	"encoding/binary"
 	"fmt"
 	"math"
-	"encoding/binary"
-	"bytes"
+	"unsafe"
 )
+
+var (
+	Endian    binary.ByteOrder
+	bigEndian bool
+)
+
+const INT_SIZE int = int(unsafe.Sizeof(0))
+
+func init() {
+	if getEndian() {
+		Endian = binary.BigEndian
+		bigEndian = true
+	} else {
+		Endian = binary.LittleEndian
+		bigEndian = false
+	}
+}
+
+func IsBigEndian() bool {
+	return bigEndian
+}
+
+func IsLittleEndian() bool {
+	return bigEndian
+}
+
+func getEndian() bool {
+	var i int = 0x1
+	bs := (*[INT_SIZE]byte)(unsafe.Pointer(&i))
+	if bs[0] == 0 {
+		return true
+	}
+	return false
+}
+
+func CheckBit(data uint64, bit int) bool {
+	mask := uint64(0x01 << uint(bit))
+	return data&mask == mask
+}
+
+func u16Tobytes(data uint16) []byte {
+	bs := make([]byte, 2)
+	if IsBigEndian() {
+		binary.BigEndian.PutUint16(bs, data)
+	} else {
+		binary.LittleEndian.PutUint16(bs, data)
+	}
+	return bs
+}
+
+func u32Tobytes(data uint32) []byte {
+	bs := make([]byte, 4)
+	if IsBigEndian() {
+		binary.BigEndian.PutUint32(bs, data)
+	} else {
+		binary.LittleEndian.PutUint32(bs, data)
+	}
+	return bs
+}
+
+func u64Tobytes(data uint64) []byte {
+	bs := make([]byte, 8)
+	if IsBigEndian() {
+		binary.BigEndian.PutUint64(bs, data)
+	} else {
+		binary.LittleEndian.PutUint64(bs, data)
+	}
+	return bs
+}
 
 func bcd(data []byte) int64 {
 	var b int64
@@ -35,19 +105,19 @@ func bcd(data []byte) int64 {
 
 func u16(data []byte) uint16 {
 	var u uint16
-	binary.Read(bytes.NewBuffer(data[0:2]), binary.LittleEndian, &u)
+	binary.Read(bytes.NewBuffer(data[0:2]), Endian, &u)
 	return u
 }
 
 func u32(data []byte) uint32 {
 	var u uint32
-	binary.Read(bytes.NewBuffer(data[0:4]), binary.LittleEndian, &u)
+	binary.Read(bytes.NewBuffer(data[0:4]), Endian, &u)
 	return u
 }
 
 func u64(data []byte) uint64 {
 	var u uint64
-	binary.Read(bytes.NewBuffer(data[0:8]), binary.LittleEndian, &u)
+	binary.Read(bytes.NewBuffer(data[0:8]), Endian, &u)
 	return u
 }
 

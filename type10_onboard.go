@@ -87,5 +87,6 @@ func GetOnBoardDeviceInformation() *OnBoardDeviceInformation {
 }
 
 func init() {
-	addTypeFunc(SMBIOSStructureTypeOnBoardDevices, newOnBoardDeviceInformation)
+	// obsolete
+	//addTypeFunc(SMBIOSStructureTypeOnBoardDevices, newOnBoardDeviceInformation)
 }
