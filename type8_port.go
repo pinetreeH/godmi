@@ -102,6 +102,9 @@ func (p PortConnectorType) String() string {
 		"PC-98Full",
 		"Other",
 	}
+	if p == 0xff {
+		return "Other"
+	}
 	return types[p]
 }
 
@@ -187,6 +190,9 @@ func (p PortType) String() string {
 		"8251 FIFO Compatible",
 		" Other",
 	}
+	if p == 0xff {
+		return "Other"
+	}
 	return types[p]
 }
 
@@ -231,7 +237,7 @@ var PortInformations []*PortInformation
 func GetPortInformation() string {
 	var ret string
 	for i, v := range PortInformations {
-		ret += "\n port infomation index:" + strconv.Itoa(i) + "\n" + v.String()
+		ret += "\nport infomation index:" + strconv.Itoa(i) + "\n" + v.String()
 	}
 	return ret
 }
