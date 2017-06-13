@@ -9,6 +9,7 @@ package godmi
 
 import (
 	"fmt"
+	"strconv"
 )
 
 type PortConnectorType byte
@@ -214,20 +215,25 @@ func (p PortInformation) String() string {
 
 func newPortInformation(h dmiHeader) dmiTyper {
 	data := h.data
-	return &PortInformation{
+	pi := &PortInformation{
 		InternalReferenceDesignator: h.FieldString(int(data[0x04])),
 		InternalConnectorType:       PortConnectorType(data[0x05]),
 		ExternalReferenceDesignator: h.FieldString(int(data[0x06])),
 		ExternalConnectorType:       PortConnectorType(data[0x07]),
 		Type: PortType(data[0x08]),
 	}
+	PortInformations = append(PortInformations, pi)
+	return pi
 }
 
-func GetPortInformation() *PortInformation {
-	if d, ok := gdmi[SMBIOSStructureTypePortConnector]; ok {
-		return d.(*PortInformation)
+var PortInformations []*PortInformation
+
+func GetPortInformation() string {
+	var ret string
+	for i, v := range PortInformations {
+		ret += "\n port infomation index:" + strconv.Itoa(i) + "\n" + v.String()
 	}
-	return nil
+	return ret
 }
 
 func init() {

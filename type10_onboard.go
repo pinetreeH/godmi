@@ -80,9 +80,6 @@ func newOnBoardDeviceInformation(h dmiHeader) dmiTyper {
 }
 
 func GetOnBoardDeviceInformation() *OnBoardDeviceInformation {
-	if d, ok := gdmi[SMBIOSStructureTypeOnBoardDevices]; ok {
-		return d.(*OnBoardDeviceInformation)
-	}
 	return nil
 }
 

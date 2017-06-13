@@ -9,6 +9,7 @@ package godmi
 
 import (
 	"fmt"
+	"strconv"
 )
 
 type SystemInformationWakeUpType byte
@@ -72,10 +73,12 @@ func (s SystemInformation) String() string {
 		s.Family)
 }
 
+var SystemInformations []*SystemInformation
+
 func newSystemInformation(h dmiHeader) dmiTyper {
 	data := h.data
 	version := h.FieldString(int(data[0x06]))
-	return &SystemInformation{
+	si := &SystemInformation{
 		Manufacturer: h.FieldString(int(data[0x04])),
 		ProductName:  h.FieldString(int(data[0x05])),
 		Version:      version,
@@ -85,13 +88,16 @@ func newSystemInformation(h dmiHeader) dmiTyper {
 		SKUNumber:    h.FieldString(int(data[0x19])),
 		Family:       h.FieldString(int(data[0x1A])),
 	}
+	SystemInformations = append(SystemInformations, si)
+	return si
 }
 
-func GetSystemInformation() *SystemInformation {
-	if d, ok := gdmi[SMBIOSStructureTypeSystem]; ok {
-		return d.(*SystemInformation)
+func GetSystemInformation() string {
+	var ret string
+	for i, v := range SystemInformations {
+		ret += "SystemInfomation index:" + strconv.Itoa(i) + "\n" + v.String()
 	}
-	return nil
+	return ret
 }
 
 func init() {

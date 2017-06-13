@@ -18,7 +18,7 @@ import (
 
 const OUT_OF_SPEC = "<OUT OF SPEC>"
 
-var gdmi map[SMBIOSStructureType]interface{}
+//var gdmi map[SMBIOSStructureType]interface{}
 
 type SMBIOSStructureType byte
 
@@ -115,6 +115,10 @@ func (b SMBIOSStructureType) String() string {
 		"Additional Information",
 		"Onboard Device",
 		"Management Controller Host Interface", /* 42 */
+	}
+
+	if b > 42 {
+		return "unspported type:" + strconv.Itoa(int(b))
 	}
 	return types[b]
 }
@@ -471,20 +475,19 @@ func (h dmiHeader) FieldString(offset int) string {
 	return string(d[index : index+ib])
 }
 
-func (e entryPoint) StructureTable() map[SMBIOSStructureType]interface{} {
+func (e entryPoint) StructureTable() error {
 	tmem, err := e.StructureTableMem()
 	if err != nil {
-		return nil
+		return err
 	}
-	m := make(map[SMBIOSStructureType]interface{})
 	for hd := newdmiHeader(tmem); hd != nil; hd = hd.Next() {
-		newtype, err := hd.newType()
+		_, err := hd.newType()
 		if err != nil {
+			fmt.Println("info: ", err)
 			continue
 		}
-		m[hd.SMType] = newtype
 	}
-	return m
+	return nil
 }
 
 type dmiTyper interface {
@@ -496,9 +499,12 @@ type newFunction func(d dmiHeader) dmiTyper
 type typeFunc map[SMBIOSStructureType]newFunction
 
 var g_typeFunc = make(typeFunc)
-var g_wg sync.WaitGroup
+
+var g_lock sync.Mutex
 
 func addTypeFunc(t SMBIOSStructureType, f newFunction) {
+	g_lock.Lock()
+	defer g_lock.Unlock()
 	g_typeFunc[t] = f
 }
 
@@ -516,151 +522,11 @@ func Init() {
 		fmt.Fprintln(os.Stderr, err)
 		panic(err)
 	}
-	gdmi = eps.StructureTable()
-}
-
-func GetCacheInformation() *CacheInformation {
-	if d, ok := gdmi[SMBIOSStructureTypeCache]; ok {
-		return d.(*CacheInformation)
+	err = eps.StructureTable()
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		panic(err)
 	}
-	return nil
-}
-
-func GetSystemReset() *SystemReset {
-	if d, ok := gdmi[SMBIOSStructureTypeSystemReset]; ok {
-		return d.(*SystemReset)
-	}
-	return nil
-}
-
-func GetHardwareSecurity() *HardwareSecurity {
-	if d, ok := gdmi[SMBIOSStructureTypeHardwareSecurity]; ok {
-		return d.(*HardwareSecurity)
-	}
-	return nil
-}
-
-func GetSystemPowerControls() *SystemPowerControls {
-	if d, ok := gdmi[SMBIOSStructureTypeSystemPowerControls]; ok {
-		return d.(*SystemPowerControls)
-	}
-	return nil
-}
-
-func GetVoltageProbe() *VoltageProbe {
-	if d, ok := gdmi[SMBIOSStructureTypeVoltageProbe]; ok {
-		return d.(*VoltageProbe)
-	}
-	return nil
-}
-
-func GetCoolingDevice() *CoolingDevice {
-	if d, ok := gdmi[SMBIOSStructureTypeCoolingDevice]; ok {
-		return d.(*CoolingDevice)
-	}
-	return nil
-}
-
-func GetTemperatureProbe() *TemperatureProbe {
-	if d, ok := gdmi[SMBIOSStructureTypeTemperatureProbe]; ok {
-		return d.(*TemperatureProbe)
-	}
-	return nil
-}
-
-func GetElectricalCurrentProbe() *ElectricalCurrentProbe {
-	if d, ok := gdmi[SMBIOSStructureTypeElectricalCurrentProbe]; ok {
-		return d.(*ElectricalCurrentProbe)
-	}
-	return nil
-}
-
-func GetOutOfBandRemoteAccess() *OutOfBandRemoteAccess {
-	if d, ok := gdmi[SMBIOSStructureTypeOut_of_bandRemoteAccess]; ok {
-		return d.(*OutOfBandRemoteAccess)
-	}
-	return nil
-}
-
-func GetSystemBootInformation() *SystemBootInformation {
-	if d, ok := gdmi[SMBIOSStructureTypeSystemBoot]; ok {
-		return d.(*SystemBootInformation)
-	}
-	return nil
-}
-
-func Get_64BitMemoryErrorInformation() *_64BitMemoryErrorInformation {
-	if d, ok := gdmi[SMBIOSStructureType64_bitMemoryError]; ok {
-		return d.(*_64BitMemoryErrorInformation)
-	}
-	return nil
-}
-
-func GetManagementDevice() *ManagementDevice {
-	if d, ok := gdmi[SMBIOSStructureTypeManagementDevice]; ok {
-		return d.(*ManagementDevice)
-	}
-	return nil
-}
-
-func GetManagementDeviceComponent() *ManagementDeviceComponent {
-	if d, ok := gdmi[SMBIOSStructureTypeManagementDeviceComponent]; ok {
-		return d.(*ManagementDeviceComponent)
-	}
-	return nil
-}
-
-func GetManagementDeviceThresholdData() *ManagementDeviceThresholdData {
-	if d, ok := gdmi[SMBIOSStructureTypeManagementDeviceThresholdData]; ok {
-		return d.(*ManagementDeviceThresholdData)
-	}
-	return nil
-}
-
-func GetMemoryChannel() *MemoryChannel {
-	if d, ok := gdmi[SMBIOSStructureTypeMemoryChannel]; ok {
-		return d.(*MemoryChannel)
-	}
-	return nil
-}
-
-func GetIPMIDeviceInformation() *IPMIDeviceInformation {
-	if d, ok := gdmi[SMBIOSStructureTypeIPMIDevice]; ok {
-		return d.(*IPMIDeviceInformation)
-	}
-	return nil
-}
-
-func GetSystemPowerSupply() *SystemPowerSupply {
-	if d, ok := gdmi[SMBIOSStructureTypePowerSupply]; ok {
-		return d.(*SystemPowerSupply)
-	}
-	return nil
-}
-
-func GetAdditionalInformation() *AdditionalInformation {
-	if d, ok := gdmi[SMBIOSStructureTypeAdditionalInformation]; ok {
-		return d.(*AdditionalInformation)
-	}
-	return nil
-}
-
-func GetOnBoardDevicesExtendedInformation() *OnBoardDevicesExtendedInformation {
-	if d, ok := gdmi[SMBIOSStructureTypeOnBoardDevicesExtendedInformation]; ok {
-		return d.(*OnBoardDevicesExtendedInformation)
-	}
-	return nil
-}
-
-func GetManagementControllerHostInterface() *ManagementControllerHostInterface {
-	if d, ok := gdmi[SMBIOSStructureTypeManagementControllerHostInterface]; ok {
-		return d.(*ManagementControllerHostInterface)
-	}
-	return nil
-}
-
-func GetGDMI() map[SMBIOSStructureType]interface{} {
-	return gdmi
 }
 
 func getMem(base uint32, length uint32) (mem []byte, err error) {

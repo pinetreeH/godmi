@@ -9,6 +9,7 @@ package godmi
 
 import (
 	"fmt"
+	"strconv"
 )
 
 type BaseboardFeatureFlags byte
@@ -115,9 +116,11 @@ func (b BaseboardInformation) String() string {
 		b.BoardType)
 }
 
+var BaseboardInformations []*BaseboardInformation
+
 func newBaseboardInformation(h dmiHeader) dmiTyper {
 	data := h.data
-	return &BaseboardInformation{
+	bi := &BaseboardInformation{
 		Manufacturer:      h.FieldString(int(data[0x04])),
 		ProductName:       h.FieldString(int(data[0x05])),
 		Version:           h.FieldString(int(data[0x06])),
@@ -127,13 +130,17 @@ func newBaseboardInformation(h dmiHeader) dmiTyper {
 		LocationInChassis: h.FieldString(int(data[0x0A])),
 		BoardType:         BaseboardType(data[0x0D]),
 	}
+
+	BaseboardInformations = append(BaseboardInformations, bi)
+	return bi
 }
 
-func GetBaseboardInformation() *BaseboardInformation {
-	if d, ok := gdmi[SMBIOSStructureTypeBaseBoard]; ok {
-		return d.(*BaseboardInformation)
+func GetBaseboardInformation() string {
+	var ret string
+	for i, v := range BaseboardInformations {
+		ret += "\n baseboad infomation index:" + strconv.Itoa(i) + "\n" + v.String()
 	}
-	return nil
+	return ret
 }
 
 func init() {

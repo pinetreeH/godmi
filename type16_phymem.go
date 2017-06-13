@@ -143,9 +143,6 @@ func newPhysicalMemoryArray(h dmiHeader) dmiTyper {
 }
 
 func GetPhysicalMemoryArray() *PhysicalMemoryArray {
-	if d, ok := gdmi[SMBIOSStructureTypePhysicalMemoryArray]; ok {
-		return d.(*PhysicalMemoryArray)
-	}
 	return nil
 }
 

@@ -293,9 +293,6 @@ func newSystemSlot(h dmiHeader) dmiTyper {
 }
 
 func GetSystemSlot() *SystemSlot {
-	if d, ok := gdmi[SMBIOSStructureTypeSystemSlots]; ok {
-		return d.(*SystemSlot)
-	}
 	return nil
 }
 

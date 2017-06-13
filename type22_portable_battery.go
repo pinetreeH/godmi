@@ -113,9 +113,6 @@ func newPortableBattery(h dmiHeader) dmiTyper {
 }
 
 func GetPortableBattery() *PortableBattery {
-	if d, ok := gdmi[SMBIOSStructureTypePortableBattery]; ok {
-		return d.(*PortableBattery)
-	}
 	return nil
 }
 

@@ -9,6 +9,7 @@ package godmi
 
 import (
 	"fmt"
+	"strconv"
 )
 
 type ChassisType byte
@@ -195,7 +196,7 @@ func (c ChassisInformation) String() string {
 
 func newChassisInformation(h dmiHeader) dmiTyper {
 	data := h.data
-	return &ChassisInformation{
+	bi := &ChassisInformation{
 		Manufacturer:                 h.FieldString(int(data[0x04])),
 		Type:                         ChassisType(data[0x05]),
 		Lock:                         ChassisLock(data[0x05] >> 7),
@@ -215,13 +216,18 @@ func newChassisInformation(h dmiHeader) dmiTyper {
 		//ci.ContainedElements:
 		SKUNumber: h.FieldString(int(data[0x15])),
 	}
+	ChassisInformations = append(ChassisInformations, bi)
+	return bi
 }
 
-func GetChassisInformation() *ChassisInformation {
-	if d, ok := gdmi[SMBIOSStructureTypeChassis]; ok {
-		return d.(*ChassisInformation)
+var ChassisInformations []*ChassisInformation
+
+func GetChassisInformation() string {
+	var ret string
+	for i, v := range ChassisInformations {
+		ret += "\n Chassis infomation index:" + strconv.Itoa(i) + "\n" + v.String()
 	}
-	return nil
+	return ret
 }
 
 func init() {

@@ -51,9 +51,6 @@ func newBIOSLanguageInformation(h dmiHeader) dmiTyper {
 }
 
 func GetBIOSLanguageInformation() *BIOSLanguageInformation {
-	if d, ok := gdmi[SMBIOSStructureTypeBIOSLanguage]; ok {
-		return d.(*BIOSLanguageInformation)
-	}
 	return nil
 }
 

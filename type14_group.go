@@ -46,9 +46,6 @@ func newGroupAssociations(h dmiHeader) dmiTyper {
 }
 
 func GetGroupAssociations() *GroupAssociations {
-	if d, ok := gdmi[SMBIOSStructureTypeGroupAssociations]; ok {
-		return d.(*GroupAssociations)
-	}
 	return nil
 }
 

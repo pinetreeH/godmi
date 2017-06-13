@@ -312,7 +312,7 @@ func (c CacheInformation) String() string {
 
 func newCacheInformation(h dmiHeader) dmiTyper {
 	data := h.data
-	return &CacheInformation{
+	ci := &CacheInformation{
 		SocketDesignation:   h.FieldString(int(data[0x04])),
 		Configuration:       NewCacheConfiguration(u16(data[0x05:0x07])),
 		MaximumCacheSize:    NewCacheSize(u16(data[0x07:0x09])),
@@ -324,6 +324,18 @@ func newCacheInformation(h dmiHeader) dmiTyper {
 		SystemCacheType:     CacheSystemCacheType(data[0x11]),
 		Associativity:       CacheAssociativity(data[0x12]),
 	}
+	CacheInformations = append(CacheInformations, ci)
+	return ci
+}
+
+var CacheInformations []*CacheInformation
+
+func GetCacheInformation() string {
+	var ret string
+	for i, v := range CacheInformations {
+		ret += "\n Cache infomation index:" + strconv.Itoa(i) + "\n" + v.String()
+	}
+	return ret
 }
 
 func init() {

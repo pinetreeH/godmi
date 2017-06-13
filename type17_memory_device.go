@@ -253,9 +253,6 @@ func newMemoryDevice(h dmiHeader) dmiTyper {
 }
 
 func GetMemoryDevice() *MemoryDevice {
-	if d, ok := gdmi[SMBIOSStructureTypeMemoryDevice]; ok {
-		return d.(*MemoryDevice)
-	}
 	return nil
 }
 

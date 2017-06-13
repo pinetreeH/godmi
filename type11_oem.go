@@ -31,9 +31,6 @@ func newOEMStrings(h dmiHeader) dmiTyper {
 }
 
 func GetOEMStrings() *OEMStrings {
-	if d, ok := gdmi[SMBIOSStructureTypeOEMStrings]; ok {
-		return d.(*OEMStrings)
-	}
 	return nil
 }
 

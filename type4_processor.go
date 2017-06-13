@@ -8,6 +8,7 @@ package godmi
 
 import (
 	"fmt"
+	"strconv"
 )
 
 type ProcessorType byte
@@ -888,7 +889,7 @@ func (p ProcessorInformation) String() string {
 
 func newProcessorInformation(h dmiHeader) dmiTyper {
 	data := h.data
-	return &ProcessorInformation{
+	pi := &ProcessorInformation{
 		SocketDesignation: h.FieldString(int(data[0x04])),
 		ProcessorType:     ProcessorType(data[0x05]),
 		Family:            ProcessorFamily(data[0x06]),
@@ -914,13 +915,18 @@ func newProcessorInformation(h dmiHeader) dmiTyper {
 		Characteristics: ProcessorCharacteristics(u16(data[0x26:0x28])),
 		Family2:         ProcessorFamily(data[0x28]),
 	}
+	ProcessorInformations = append(ProcessorInformations, pi)
+	return pi
 }
 
-func GetProcessorInformation() *ProcessorInformation {
-	if d, ok := gdmi[SMBIOSStructureTypeProcessor]; ok {
-		return d.(*ProcessorInformation)
+var ProcessorInformations []*ProcessorInformation
+
+func GetProcessorInformation() string {
+	var ret string
+	for i, v := range ProcessorInformations {
+		ret += "\n processor infomation index:" + strconv.Itoa(i) + "\n" + v.String()
 	}
-	return nil
+	return ret
 }
 
 func init() {

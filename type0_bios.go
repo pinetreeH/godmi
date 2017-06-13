@@ -9,6 +9,7 @@ package godmi
 
 import (
 	"fmt"
+	"strconv"
 )
 
 type BIOSCharacteristics uint64
@@ -218,6 +219,8 @@ func (b BIOSInformation) String() string {
 	return s
 }
 
+var BIOSInformations []*BIOSInformation
+
 func newBIOSInformation(h dmiHeader) dmiTyper {
 	data := h.data
 	sas := u16(data[0x06:0x08])
@@ -236,14 +239,17 @@ func newBIOSInformation(h dmiHeader) dmiTyper {
 	if h.Length >= 0x14 {
 		bi.CharacteristicsExt2 = BIOSCharacteristicsExt2(data[0x13])
 	}
+	BIOSInformations = append(BIOSInformations, bi)
+
 	return bi
 }
 
-func GetBIOSInformation() *BIOSInformation {
-	if d, ok := gdmi[SMBIOSStructureTypeBIOS]; ok {
-		return d.(*BIOSInformation)
+func GetBIOSInformation() string {
+	var ret string
+	for i, v := range BIOSInformations {
+		ret += "\n BIOSInfomation index:" + strconv.Itoa(i) + "\n" + v.String()
 	}
-	return nil
+	return ret
 }
 
 func init() {

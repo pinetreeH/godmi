@@ -133,9 +133,6 @@ func new_32BitMemoryErrorInformation(h dmiHeader) dmiTyper {
 }
 
 func Get_32BitMemoryErrorInformation() *_32BitMemoryErrorInformation {
-	if d, ok := gdmi[SMBIOSStructureType32_bitMemoryError]; ok {
-		return d.(*_32BitMemoryErrorInformation)
-	}
 	return nil
 }
 

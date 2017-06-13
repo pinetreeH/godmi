@@ -31,9 +31,6 @@ func newSystemConfigurationOptions(h dmiHeader) dmiTyper {
 }
 
 func GetSystemConfigurationOptions() *SystemConfigurationOptions {
-	if d, ok := gdmi[SMBIOSStructureTypeSystemConfigurationOptions]; ok {
-		return d.(*SystemConfigurationOptions)
-	}
 	return nil
 }
 

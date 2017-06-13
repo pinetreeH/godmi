@@ -100,9 +100,6 @@ func newBuiltinPointingDevice(h dmiHeader) dmiTyper {
 }
 
 func GetBuiltinPointingDevice() *BuiltinPointingDevice {
-	if d, ok := gdmi[SMBIOSStructureTypeBuilt_inPointingDevice]; ok {
-		return d.(*BuiltinPointingDevice)
-	}
 	return nil
 }
 
