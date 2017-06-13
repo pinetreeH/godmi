@@ -8,6 +8,7 @@ package godmi
 
 import (
 	"fmt"
+	"strconv"
 )
 
 type OEMStrings struct {
@@ -27,11 +28,18 @@ func newOEMStrings(h dmiHeader) dmiTyper {
 	for i := byte(0); i < o.Count; i++ {
 		o.strings += fmt.Sprintf("strings: %d %s\n\t\t", i, h.FieldString(int(data[i])))
 	}
+	OEMStringsList = append(OEMStringsList, &o)
 	return &o
 }
 
-func GetOEMStrings() *OEMStrings {
-	return nil
+var OEMStringsList []*OEMStrings
+
+func GetOEMStrings() string {
+	var ret string
+	for i, v := range OEMStringsList {
+		ret += "\nOEM strings index:" + strconv.Itoa(i) + "\n" + v.String()
+	}
+	return ret
 }
 
 func init() {
