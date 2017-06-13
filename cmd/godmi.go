@@ -25,4 +25,5 @@ func main() {
 	fmt.Printf("%s\n", godmi.GetCacheInformation())
 	fmt.Printf("%s\n", godmi.GetPortInformation())
 	fmt.Printf("%s\n", godmi.GetSystemSlot())
+	fmt.Printf("%s\n", godmi.GetOEMStrings())
 }
