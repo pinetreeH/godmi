@@ -8,6 +8,7 @@ package godmi
 
 import (
 	"fmt"
+	"strconv"
 )
 
 type SystemSlotType byte
@@ -32,6 +33,22 @@ const (
 	SystemSlotTypeAGP4X
 	SystemSlotTypePCI_X
 	SystemSlotTypeAGP8X
+	SystemSlotTypeM2Socket1DP
+	SystemSlotTypeM2Socket1SP
+	SystemSlotTypeM2Socket2
+	SystemSlotTypeM2Socket3
+	SystemSlotTypeMXMType1
+	SystemSlotTypeMXMType2
+	SystemSlotTypeMXMType3_StandardConnector
+	SystemSlotTypeMXMType3_HEConnector
+	SystemSlotTypeMXMType4
+	SystemSlotTypeMXM3TypeA
+	SystemSlotTypeMXM3TypeB
+	SystemSlotTypePCIExpressGen2SFF_8639
+	SystemSlotTypePCIExpressGen3SFF_8639
+	SystemSlotTypePCIExpressMini52_pin_WithBottomSide
+	SystemSlotTypePCIExpressMini52_pin_WithoutBottomSide
+	SystemSlotTypePCIExpressMini76_pin
 	SystemSlotTypePC_98C20
 	SystemSlotTypePC_98C24
 	SystemSlotTypePC_98E
@@ -59,7 +76,7 @@ const (
 
 func (s SystemSlotType) String() string {
 	types := [...]string{
-		"Other",
+		"Other", // 0x01
 		"Unknown",
 		"ISA",
 		"MCA",
@@ -78,7 +95,25 @@ func (s SystemSlotType) String() string {
 		"AGP 4X",
 		"PCI-X",
 		"AGP 8X",
-		"PC-98/C20",
+		"M.2 Socket 1-DP (Mechanical Key A)",
+		"M.2 Socket 1-SD (Mechanical Key E)",
+		"M.2 Socket 2 (Mechanical Key B)",
+		"M.2 Socket 3 (Mechanical Key M)",
+		"MXM Type I",
+		"MXM Type II",
+		"MXM Type III (standard connector)",
+		"MXM Type III (HE connector)",
+		"MXM Type IV",
+		"MXM 3.0 Type A",
+		"MXM 3.0 Type B",
+		"PCI Express Gen 2 SFF-8639",
+		"PCI Express Gen 3 SFF-8639",
+		"PCI Express Mini 52-pin (CEM spec. 2.0) with bottom-side keep-outs",
+		"PCI Express Mini 52-pin (CEM spec. 2.0) without bottom-side keep-outs",
+		"PCI Express Mini 76-pin", // 0x23
+	}
+	types2 := [...]string{
+		"PC-98/C20", //0xa0
 		"PC-98/C24",
 		"PC-98/E",
 		"PC-98/Local Bus",
@@ -102,7 +137,10 @@ func (s SystemSlotType) String() string {
 		"PCI Express Gen 3 x8",
 		"PCI Express Gen 3 x16",
 	}
-	return types[s-1]
+	if s < 0xa0 {
+		return types[s-1]
+	}
+	return types2[s-0xa0]
 }
 
 type SystemSlotDataBusWidth byte
@@ -250,18 +288,18 @@ type SystemSlot struct {
 }
 
 func (s SystemSlot) String() string {
-	return fmt.Sprintf("System Slot %s\n"+
+	return fmt.Sprintf("System Slot Information\n"+
 		"\tSlot Designation: %s\n"+
 		"\tSlot Type: %s\n"+
 		"\tSlot Data Bus Width: %s\n"+
 		"\tCurrent Usage: %s\n"+
 		"\tSlot Length: %s\n"+
-		"\tSlot ID: %s\n"+
+		"\tSlot ID: %d\n"+
 		"\tSlot Characteristics1: %s\n"+
 		"\tSlot Characteristics2: %s\n"+
-		"\tSegment Group Number: %s\n"+
-		"\tBus Number: %s\n"+
-		"\tDevice/Function Number: %s",
+		"\tSegment Group Number: %d\n",
+		//	"\tBus Number: %s\n"+
+		// "\tDevice/Function Number: %s",
 		s.Designation,
 		s.Type,
 		s.DataBusWidth,
@@ -271,13 +309,15 @@ func (s SystemSlot) String() string {
 		s.Characteristics1,
 		s.Characteristics2,
 		s.SegmentGroupNumber,
-		s.BusNumber,
-		s.DeviceFunctionNumber)
+		// TODO:
+		//	s.BusNumber,
+		// s.DeviceFunctionNumber)
+	)
 }
 
 func newSystemSlot(h dmiHeader) dmiTyper {
 	data := h.data
-	return &SystemSlot{
+	si := &SystemSlot{
 		Designation:          h.FieldString(int(data[0x04])),
 		Type:                 SystemSlotType(data[0x05]),
 		DataBusWidth:         SystemSlotDataBusWidth(data[0x06]),
@@ -290,10 +330,18 @@ func newSystemSlot(h dmiHeader) dmiTyper {
 		BusNumber:            SystemSlotNumber(data[0x0F]),
 		DeviceFunctionNumber: SystemSlotNumber(data[0x10]),
 	}
+	SystemSlots = append(SystemSlots, si)
+	return si
 }
 
-func GetSystemSlot() *SystemSlot {
-	return nil
+var SystemSlots []*SystemSlot
+
+func GetSystemSlot() string {
+	var ret string
+	for i, v := range SystemSlots {
+		ret += "\nSystem slot index:" + strconv.Itoa(i) + "\n" + v.String()
+	}
+	return ret
 }
 
 func init() {
