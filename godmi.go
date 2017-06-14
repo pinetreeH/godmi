@@ -150,7 +150,8 @@ type entryPoint struct {
 
 type dmiHeader struct {
 	infoCommon
-	data []byte
+	data      []byte
+	strFields []string
 }
 
 func (h dmiHeader) SystemReset() *SystemReset {
@@ -398,19 +399,6 @@ func (h dmiHeader) EndOfTable() *EndOfTable {
 	return &EndOfTable{}
 }
 
-func newdmiHeader(data []byte) *dmiHeader {
-	if len(data) < 0x04 {
-		return nil
-	}
-	return &dmiHeader{
-		infoCommon: infoCommon{
-			SMType: SMBIOSStructureType(data[0x00]),
-			Length: data[1],
-			Handle: SMBIOSStructureHandle(u16(data[0x02:0x04])),
-		},
-		data: data}
-}
-
 func newEntryPoint() (eps *entryPoint, err error) {
 	eps = new(entryPoint)
 
@@ -439,40 +427,67 @@ func (e entryPoint) StructureTableMem() ([]byte, error) {
 	return getMem(e.TableAddress, uint32(e.TableLength))
 }
 
+func newdmiHeader(d []byte) *dmiHeader {
+	if len(d) < 0x04 {
+		return nil
+	}
+	h := dmiHeader{
+		infoCommon: infoCommon{
+			SMType: SMBIOSStructureType(d[0x00]),
+			Length: d[1],
+			Handle: SMBIOSStructureHandle(u16(d[0x02:0x04])),
+		},
+		data: d,
+	}
+	h.setStringFields()
+	return &h
+}
+
 func (h dmiHeader) Next() *dmiHeader {
-	de := []byte{0, 0}
-	next := h.data[h.Length:]
-	index := bytes.Index(next, de)
+	index := h.getStructTableEndIndex()
 	if index == -1 {
 		return nil
 	}
-	return newdmiHeader(next[index+2:])
+	return newdmiHeader(h.data[index+2:])
 }
 
-func (h dmiHeader) newType() (interface{}, error) {
+func (h dmiHeader) getStructTableEndIndex() int {
+	de := []byte{0, 0}
+	next := h.data[h.Length:]
+	endIdx := bytes.Index(next, de)
+	if endIdx == -1 {
+		return -1
+	}
+	return int(h.Length) + endIdx
+}
+
+func (h dmiHeader) decode() error {
 	t := h.SMType
 	newfn, err := getTypeFunc(t)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	return newfn(h), nil
+	newfn(h)
+	return nil
 }
 
-func (h dmiHeader) FieldString(offset int) string {
-	d := h.data
-	index := int(h.Length)
-	if offset == 0 {
-		return "Not Specified"
+func (h *dmiHeader) setStringFields() {
+	index := h.getStructTableEndIndex()
+	if index == -1 {
+		return
 	}
-	for i := offset; i > 1 && d[index] != 0; i-- {
-		ib := bytes.IndexByte(d[index:], 0)
-		if ib != -1 {
-			index += ib
-			index++
-		}
+	fieldData := h.data[h.Length:index]
+	bs := bytes.Split(fieldData, []byte{0})
+	for _, v := range bs {
+		h.strFields = append(h.strFields, string(v))
 	}
-	ib := bytes.IndexByte(d[index:], 0)
-	return string(d[index : index+ib])
+}
+
+func (h dmiHeader) FieldString(strIndex int) string {
+	if strIndex == 0 {
+		return "FieldString(offset==0,Not Specified)"
+	}
+	return h.strFields[strIndex-1]
 }
 
 func (e entryPoint) StructureTable() error {
@@ -481,7 +496,7 @@ func (e entryPoint) StructureTable() error {
 		return err
 	}
 	for hd := newdmiHeader(tmem); hd != nil; hd = hd.Next() {
-		_, err := hd.newType()
+		err := hd.decode()
 		if err != nil {
 			fmt.Println("info: ", err)
 			continue

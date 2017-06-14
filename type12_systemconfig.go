@@ -8,6 +8,7 @@ package godmi
 
 import (
 	"fmt"
+	"strconv"
 )
 
 type SystemConfigurationOptions struct {
@@ -24,14 +25,21 @@ func newSystemConfigurationOptions(h dmiHeader) dmiTyper {
 	var sc SystemConfigurationOptions
 	data := h.data
 	sc.Count = data[0x04]
-	for i := byte(1); i <= sc.Count; i++ {
-		sc.strings += fmt.Sprintf("string %d: %s\n\t\t", i, h.FieldString(int(data[0x04+i])))
+	for i := 1; i <= int(sc.Count); i++ {
+		sc.strings += fmt.Sprintf("string %d: %s\n\t\t", i, h.FieldString(i))
 	}
+	SystemConfigurationOptionsList = append(SystemConfigurationOptionsList, &sc)
 	return &sc
 }
 
-func GetSystemConfigurationOptions() *SystemConfigurationOptions {
-	return nil
+var SystemConfigurationOptionsList []*SystemConfigurationOptions
+
+func GetSystemConfigurationOptions() string {
+	var ret string
+	for i, v := range SystemConfigurationOptionsList {
+		ret += "\nSystem configuration options strings index:" + strconv.Itoa(i) + "\n" + v.String()
+	}
+	return ret
 }
 
 func init() {

@@ -26,4 +26,6 @@ func main() {
 	fmt.Printf("%s\n", godmi.GetPortInformation())
 	fmt.Printf("%s\n", godmi.GetSystemSlot())
 	fmt.Printf("%s\n", godmi.GetOEMStrings())
+	fmt.Printf("%s\n", godmi.GetSystemConfigurationOptions())
+	fmt.Printf("%s\n", godmi.GetBIOSLanguageInformation())
 }

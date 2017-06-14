@@ -18,15 +18,15 @@ type OEMStrings struct {
 }
 
 func (o OEMStrings) String() string {
-	return fmt.Sprintf("OEM strings: %s", o.strings)
+	return fmt.Sprintf("OEM strings:\n\t\t%s", o.strings)
 }
 
 func newOEMStrings(h dmiHeader) dmiTyper {
 	var o OEMStrings
 	data := h.data
 	o.Count = data[0x04]
-	for i := byte(0); i < o.Count; i++ {
-		o.strings += fmt.Sprintf("strings: %d %s\n\t\t", i, h.FieldString(int(data[i])))
+	for i := 1; i <= int(o.Count); i++ {
+		o.strings += fmt.Sprintf("strings: %d %s\n\t\t", i, h.FieldString(i))
 	}
 	OEMStringsList = append(OEMStringsList, &o)
 	return &o

@@ -8,6 +8,7 @@ package godmi
 
 import (
 	"fmt"
+	"strconv"
 )
 
 type BIOSLanguageInformationFlag byte
@@ -17,8 +18,15 @@ const (
 	BIOSLanguageInformationFlagAbbreviatedFormat
 )
 
+func (f BIOSLanguageInformationFlag) String() string {
+	if f == BIOSLanguageInformationFlagLongFormat {
+		return "long format"
+	}
+	return "abbreviated format"
+}
+
 func NewBIOSLanguageInformationFlag(f byte) BIOSLanguageInformationFlag {
-	return BIOSLanguageInformationFlag(f & 0xFE)
+	return BIOSLanguageInformationFlag(f & 0x01)
 }
 
 type BIOSLanguageInformation struct {
@@ -42,16 +50,23 @@ func newBIOSLanguageInformation(h dmiHeader) dmiTyper {
 	var bl BIOSLanguageInformation
 	data := h.data
 	cnt := data[0x04]
-	for i := byte(1); i <= cnt; i++ {
-		bl.InstallableLanguage = append(bl.InstallableLanguage, h.FieldString(int(data[i])))
+	for i := 1; i <= int(cnt); i++ {
+		bl.InstallableLanguage = append(bl.InstallableLanguage, h.FieldString(i))
 	}
 	bl.Flags = NewBIOSLanguageInformationFlag(data[0x05])
-	bl.CurrentLanguage = bl.InstallableLanguage[data[0x15]]
+	bl.CurrentLanguage = bl.InstallableLanguage[data[0x15]-1]
+	BIOSLanguageInformations = append(BIOSLanguageInformations, &bl)
 	return &bl
 }
 
-func GetBIOSLanguageInformation() *BIOSLanguageInformation {
-	return nil
+var BIOSLanguageInformations []*BIOSLanguageInformation
+
+func GetBIOSLanguageInformation() string {
+	var ret string
+	for i, v := range BIOSLanguageInformations {
+		ret += "\nBIOS language infomation strings index:" + strconv.Itoa(i) + "\n" + v.String()
+	}
+	return ret
 }
 
 func init() {
