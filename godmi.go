@@ -526,7 +526,7 @@ func addTypeFunc(t SMBIOSStructureType, f newFunction) {
 func getTypeFunc(t SMBIOSStructureType) (fn newFunction, err error) {
 	fn, ok := g_typeFunc[t]
 	if !ok {
-		return fn, fmt.Errorf("type %s have no NewFunction", t)
+		return fn, fmt.Errorf("type %d have no NewFunction", int(t))
 	}
 	return fn, nil
 }

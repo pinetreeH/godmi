@@ -8,6 +8,7 @@ package godmi
 
 import (
 	"fmt"
+	"strconv"
 )
 
 type GroupAssociationsItem struct {
@@ -42,11 +43,18 @@ func newGroupAssociations(h dmiHeader) dmiTyper {
 		gai.Handle = SMBIOSStructureHandle(u16(items[i*3+1:]))
 		ga.Item = append(ga.Item, gai)
 	}
+	GroupAssociationsList = append(GroupAssociationsList, &ga)
 	return &ga
 }
 
-func GetGroupAssociations() *GroupAssociations {
-	return nil
+var GroupAssociationsList []*GroupAssociations
+
+func GetGroupAssociations() string {
+	var ret string
+	for i, v := range GroupAssociationsList {
+		ret += "\nGroup Associations index:" + strconv.Itoa(i) + "\n" + v.String()
+	}
+	return ret
 }
 
 func init() {

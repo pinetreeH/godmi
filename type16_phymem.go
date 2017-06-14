@@ -9,6 +9,7 @@ package godmi
 
 import (
 	"fmt"
+	"strconv"
 )
 
 type PhysicalMemoryArrayLocation byte
@@ -116,8 +117,8 @@ func (p PhysicalMemoryArray) String() string {
 		"\tLocation: %s\n"+
 		"\tUse: %s\n"+
 		"\tMemory Error Correction: %s\n"+
-		"\tMaximum Capacity: %d\n"+
-		"\tMemory Error Information Handle: %d\n"+
+		"\tMaximum Capacity: %d kb\n"+
+		"\tMemory Error Information Handle: %0#x\n"+
 		"\tNumber of Memory Devices: %d\n"+
 		"\tExtended Maximum Capacity: %d",
 		p.Location,
@@ -131,7 +132,7 @@ func (p PhysicalMemoryArray) String() string {
 
 func newPhysicalMemoryArray(h dmiHeader) dmiTyper {
 	data := h.data
-	return &PhysicalMemoryArray{
+	p := &PhysicalMemoryArray{
 		Location:                PhysicalMemoryArrayLocation(data[0x04]),
 		Use:                     PhysicalMemoryArrayUse(data[0x05]),
 		ErrorCorrection:         PhysicalMemoryArrayErrorCorrection(data[0x06]),
@@ -140,10 +141,18 @@ func newPhysicalMemoryArray(h dmiHeader) dmiTyper {
 		NumberOfMemoryDevices:   u16(data[0x0D:0x0F]),
 		ExtendedMaximumCapacity: u64(data[0x0F:]),
 	}
+	PhysicalMemoryArrays = append(PhysicalMemoryArrays, p)
+	return p
 }
 
-func GetPhysicalMemoryArray() *PhysicalMemoryArray {
-	return nil
+var PhysicalMemoryArrays []*PhysicalMemoryArray
+
+func GetPhysicalMemoryArray() string {
+	var ret string
+	for i, v := range PhysicalMemoryArrays {
+		ret += "\nPhysical Memory Arrays index:" + strconv.Itoa(i) + "\n" + v.String()
+	}
+	return ret
 }
 
 func init() {
