@@ -29,5 +29,6 @@ func main() {
 	//	fmt.Printf("%s\n", godmi.GetSystemConfigurationOptions())
 	//	fmt.Printf("%s\n", godmi.GetBIOSLanguageInformation())
 	//  fmt.Printf("%s\n", godmi.GetGroupAssociations())
-	fmt.Printf("%s\n", godmi.GetPhysicalMemoryArray())
+	// fmt.Printf("%s\n", godmi.GetPhysicalMemoryArray())
+	fmt.Printf("%s\n", godmi.GetMemoryDevice())
 }
