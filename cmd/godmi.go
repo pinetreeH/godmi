@@ -32,5 +32,6 @@ func main() {
 	// fmt.Printf("%s\n", godmi.GetPhysicalMemoryArray())
 	// fmt.Printf("%s\n", godmi.GetMemoryDevice())
 	// fmt.Printf("%s\n", godmi.Get_32BitMemoryErrorInformation())
-	fmt.Printf("%s\n", godmi.GetBuiltinPointingDevice())
+	//fmt.Printf("%s\n", godmi.GetBuiltinPointingDevice())
+	fmt.Printf("%s\n", godmi.GetPortableBattery())
 }
