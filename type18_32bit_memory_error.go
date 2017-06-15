@@ -8,26 +8,10 @@ package godmi
 
 import (
 	"fmt"
+	"strconv"
 )
 
 type MemoryErrorInformationType byte
-
-const (
-	MemoryErrorInformationTypeOther MemoryErrorInformationType = 1 + iota
-	MemoryErrorInformationTypeUnknown
-	MemoryErrorInformationTypeOK
-	MemoryErrorInformationTypeBadread
-	MemoryErrorInformationTypeParityerror
-	MemoryErrorInformationTypeSingle_biterror
-	MemoryErrorInformationTypeDouble_biterror
-	MemoryErrorInformationTypeMulti_biterror
-	MemoryErrorInformationTypeNibbleerror
-	MemoryErrorInformationTypeChecksumerror
-	MemoryErrorInformationTypeCRCerror
-	MemoryErrorInformationTypeCorrectedsingle_biterror
-	MemoryErrorInformationTypeCorrectederror
-	MemoryErrorInformationTypeUncorrectableerror
-)
 
 func (m MemoryErrorInformationType) String() string {
 	types := [...]string{
@@ -51,13 +35,6 @@ func (m MemoryErrorInformationType) String() string {
 
 type MemoryErrorInformationGranularity byte
 
-const (
-	MemoryErrorInformationGranularityOther MemoryErrorInformationGranularity = 1 + iota
-	MemoryErrorInformationGranularityUnknown
-	MemoryErrorInformationGranularityDevicelevel
-	MemoryErrorInformationGranularityMemorypartitionlevel
-)
-
 func (m MemoryErrorInformationGranularity) String() string {
 	grans := [...]string{
 		"Other",
@@ -70,14 +47,6 @@ func (m MemoryErrorInformationGranularity) String() string {
 
 type MemoryErrorInformationOperation byte
 
-const (
-	MemoryErrorInformationOperationOther MemoryErrorInformationOperation = 1 + iota
-	MemoryErrorInformationOperationUnknown
-	MemoryErrorInformationOperationRead
-	MemoryErrorInformationOperationWrite
-	MemoryErrorInformationOperationPartialwrite
-)
-
 func (m MemoryErrorInformationOperation) String() string {
 	operations := [...]string{
 		"Other",
@@ -89,15 +58,51 @@ func (m MemoryErrorInformationOperation) String() string {
 	return operations[m-1]
 }
 
+type VendorSyndromeType uint32
+
+func (v VendorSyndromeType) String() string {
+	if v == 0x00000000 {
+		return "Unknown"
+	}
+	return strconv.Itoa(int(v))
+}
+
+type ArrayErrorAddressType uint32
+
+func (a ArrayErrorAddressType) String() string {
+	if a == 0x80000000 {
+		return "Unknown"
+	}
+	return strconv.Itoa(int(a))
+}
+
+type ResolutionType uint32
+
+func (a ResolutionType) String() string {
+	if a == 0x80000000 {
+		return "Unknown"
+	}
+	return strconv.Itoa(int(a))
+}
+
+type ErrorAddressType uint32
+
+func (a ErrorAddressType) String() string {
+	if a == 0x80000000 {
+		return "Unknown"
+	}
+	return strconv.Itoa(int(a))
+}
+
 type _32BitMemoryErrorInformation struct {
 	infoCommon
 	Type              MemoryErrorInformationType
 	Granularity       MemoryErrorInformationGranularity
 	Operation         MemoryErrorInformationOperation
-	VendorSyndrome    uint32
-	ArrayErrorAddress uint32
-	ErrorAddress      uint32
-	Resolution        uint32
+	VendorSyndrome    VendorSyndromeType
+	ArrayErrorAddress ArrayErrorAddressType
+	ErrorAddress      ErrorAddressType
+	Resolution        ResolutionType
 }
 
 func (m _32BitMemoryErrorInformation) String() string {
@@ -105,10 +110,10 @@ func (m _32BitMemoryErrorInformation) String() string {
 		"\tError Type: %s\n"+
 		"\tError Granularity: %s\n"+
 		"\tError Operation: %s\n"+
-		"\tVendor Syndrome: %d\n"+
-		"\tMemory Array Error Address: %d\n"+
-		"\tDevice Error Address: %d\n"+
-		"\tError Resoluton: %d",
+		"\tVendor Syndrome: %s\n"+
+		"\tMemory Array Error Address: %s\n"+
+		"\tDevice Error Address: %s\n"+
+		"\tError Resoluton: %s",
 		m.Type,
 		m.Granularity,
 		m.Operation,
@@ -121,19 +126,27 @@ func (m _32BitMemoryErrorInformation) String() string {
 
 func new_32BitMemoryErrorInformation(h dmiHeader) dmiTyper {
 	data := h.data
-	return &_32BitMemoryErrorInformation{
+	bi := &_32BitMemoryErrorInformation{
 		Type:              MemoryErrorInformationType(data[0x04]),
 		Granularity:       MemoryErrorInformationGranularity(data[0x05]),
 		Operation:         MemoryErrorInformationOperation(data[0x06]),
-		VendorSyndrome:    u32(data[0x07:0x0B]),
-		ArrayErrorAddress: u32(data[0x0B:0x0F]),
-		ErrorAddress:      u32(data[0x0F:0x13]),
-		Resolution:        u32(data[0x13:0x22]),
+		VendorSyndrome:    VendorSyndromeType(u32(data[0x07:0x0B])),
+		ArrayErrorAddress: ArrayErrorAddressType(u32(data[0x0B:0x0F])),
+		ErrorAddress:      ErrorAddressType(u32(data[0x0F:0x13])),
+		Resolution:        ResolutionType(u32(data[0x13:0x22])),
 	}
+	Bit32MemoryErrorInformations = append(Bit32MemoryErrorInformations, bi)
+	return bi
 }
 
-func Get_32BitMemoryErrorInformation() *_32BitMemoryErrorInformation {
-	return nil
+var Bit32MemoryErrorInformations []*_32BitMemoryErrorInformation
+
+func Get_32BitMemoryErrorInformation() string {
+	var ret string
+	for i, v := range Bit32MemoryErrorInformations {
+		ret += "\n32-Bit Memory Error information index:" + strconv.Itoa(i) + "\n" + v.String()
+	}
+	return ret
 }
 
 func init() {
