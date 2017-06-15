@@ -8,21 +8,10 @@ package godmi
 
 import (
 	"fmt"
+	"strconv"
 )
 
 type BuiltinPointingDeviceType byte
-
-const (
-	BuiltinPointingDeviceTypeOther BuiltinPointingDeviceType = 1 + iota
-	BuiltinPointingDeviceTypeUnknown
-	BuiltinPointingDeviceTypeMouse
-	BuiltinPointingDeviceTypeTrackBall
-	BuiltinPointingDeviceTypeTrackPoint
-	BuiltinPointingDeviceTypeGlidePoint
-	BuiltinPointingDeviceTypeTouchPad
-	BuiltinPointingDeviceTypeTouchScreen
-	BuiltinPointingDeviceTypeOpticalSensor
-)
 
 func (b BuiltinPointingDeviceType) String() string {
 	types := [...]string{
@@ -41,35 +30,26 @@ func (b BuiltinPointingDeviceType) String() string {
 
 type BuiltinPointingDeviceInterface byte
 
-const (
-	BuiltinPointingDeviceInterfaceOther BuiltinPointingDeviceInterface = 1 + iota
-	BuiltinPointingDeviceInterfaceUnknown
-	BuiltinPointingDeviceInterfaceSerial
-	BuiltinPointingDeviceInterfacePS2
-	BuiltinPointingDeviceInterfaceInfrared
-	BuiltinPointingDeviceInterfaceHP_HIL
-	BuiltinPointingDeviceInterfaceBusmouse
-	BuiltinPointingDeviceInterfaceADB
-	BuiltinPointingDeviceInterfaceBusmouseDB_9
-	BuiltinPointingDeviceInterfaceBusmousemicro_DIN
-	BuiltinPointingDeviceInterfaceUSB
-)
-
 func (b BuiltinPointingDeviceInterface) String() string {
-	interfaces := [...]string{
-		"Other",
+	interfaces1 := [...]string{
+		"Other", // 0x01h
 		"Unknown",
 		"Serial",
 		"PS/2",
 		"Infrared",
 		"HP-HIL",
 		"Bus mouse",
-		"ADB (Apple Desktop Bus)",
-		"Bus mouse DB-9",
-		"Bus mouse micro-DIN",
-		"USB",
+		"ADB (Apple Desktop Bus)", // 0x08h
 	}
-	return interfaces[b-1]
+	interfaces2 := [...]string{
+		"Bus mouse DB-9", // 0xA0h
+		"Bus mouse micro-DIN",
+		"USB", // 0xA2h
+	}
+	if b < 0xA0 {
+		return interfaces1[b-1]
+	}
+	return interfaces2[b-0xA0]
 }
 
 type BuiltinPointingDevice struct {
@@ -92,15 +72,23 @@ func (b BuiltinPointingDevice) String() string {
 
 func newBuiltinPointingDevice(h dmiHeader) dmiTyper {
 	data := h.data
-	return &BuiltinPointingDevice{
+	bi := &BuiltinPointingDevice{
 		Type:            BuiltinPointingDeviceType(data[0x04]),
 		Interface:       BuiltinPointingDeviceInterface(data[0x05]),
 		NumberOfButtons: data[0x06],
 	}
+	BuiltinPointingDevices = append(BuiltinPointingDevices, bi)
+	return bi
 }
 
-func GetBuiltinPointingDevice() *BuiltinPointingDevice {
-	return nil
+var BuiltinPointingDevices []*BuiltinPointingDevice
+
+func GetBuiltinPointingDevice() string {
+	var ret string
+	for i, v := range BuiltinPointingDevices {
+		ret += "\nBuiltin Pointing Devices information index:" + strconv.Itoa(i) + "\n" + v.String()
+	}
+	return ret
 }
 
 func init() {
