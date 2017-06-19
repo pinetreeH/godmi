@@ -413,9 +413,9 @@ func newEntryPoint() (eps *entryPoint, err error) {
 	eps.MajorVersion = data[0x06]
 	eps.MinorVersion = data[0x07]
 	eps.MaxSize = u16(data[0x08:0x0A])
+	eps.Revision = data[0x0A]
 	eps.FormattedArea = data[0x0B:0x0F]
 	eps.InterAnchor = data[0x10:0x15]
-	eps.InterChecksum = data[0x15]
 	eps.TableLength = u16(data[0x16:0x18])
 	eps.TableAddress = u32(data[0x18:0x1C])
 	eps.NumberOfSM = u16(data[0x1C:0x1E])
@@ -487,6 +487,9 @@ func (h dmiHeader) FieldString(strIndex int) string {
 	if strIndex == 0 {
 		return "FieldString(offset==0,Not Specified)"
 	}
+	if strIndex > len(h.strFields) {
+		return fmt.Sprintf("FieldString ### ERROR:strFields Len:%d, strIndex:%d", len(h.strFields), strIndex)
+	}
 	return h.strFields[strIndex-1]
 }
 
@@ -556,8 +559,8 @@ func getMem(base uint32, length uint32) (mem []byte, err error) {
 	if err != nil {
 		return
 	}
-	mem = make([]byte, len(mm))
-	copy(mem, mm)
+	mem = make([]byte, length)
+	copy(mem, mm[mmoffset:])
 	err = syscall.Munmap(mm)
 	if err != nil {
 		return
@@ -568,6 +571,9 @@ func getMem(base uint32, length uint32) (mem []byte, err error) {
 func anchor(mem []byte) []byte {
 	anchor := []byte{'_', 'S', 'M', '_'}
 	i := bytes.Index(mem, anchor)
+	if i == -1 {
+		panic("find anchor error!")
+	}
 	return mem[i:]
 }
 
