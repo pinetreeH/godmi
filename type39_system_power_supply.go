@@ -1,13 +1,14 @@
 /*
 * File Name:	type39_system_power_supply.go
-* Description:	
+* Description:
 * Author:	Chapman Ou <ochapman.cn@gmail.com>
 * Created:	2014-08-20
-*/
+ */
 package godmi
 
 import (
 	"fmt"
+	"strconv"
 )
 
 type SystemPowerSupplyType byte
@@ -37,7 +38,7 @@ func (s SystemPowerSupplyType) String() string {
 		"Reserved",
 	}
 	if s <= 7 {
-		return types[s]
+		return types[s-1]
 	}
 	return types[8]
 }
@@ -104,7 +105,7 @@ func newSystemPowerSupplyCharacteristics(ch uint16) SystemPowerSupplyCharacteris
 	var sp SystemPowerSupplyCharacteristics
 	sp.DMTFPowerSupplyType = SystemPowerSupplyType((ch & 0x3c00) >> 10)
 	sp.Status = SystemPowerSupplyStatus((ch & 0x380) >> 7)
-	sp.DMTFInputVoltageSwitching = SystemPowerSupplyInputVoltageSwitching((ch & 0x70) >> 3)
+	sp.DMTFInputVoltageSwitching = SystemPowerSupplyInputVoltageSwitching((ch & 0x78) >> 3)
 	sp.IsUnpluggedFromWall = (ch&0x04 != 0)
 	sp.IsPresent = (ch&0x02 != 0)
 	sp.IsHotRepleaceable = (ch&0x01 != 0)
@@ -127,6 +128,42 @@ func (s SystemPowerSupplyCharacteristics) String() string {
 		s.IsHotRepleaceable)
 }
 
+type MaxPowerCapacityType uint16
+
+func (p MaxPowerCapacityType) String() string {
+	if p == 0x8000 {
+		return "Unknown"
+	}
+	return strconv.Itoa(int(p))
+}
+
+type InputVoltageProbeHandleType uint16
+
+func (p InputVoltageProbeHandleType) String() string {
+	if p == 0xffff {
+		return "No probe"
+	}
+	return strconv.Itoa(int(p))
+}
+
+type CoolingDeviceHandleType uint16
+
+func (p CoolingDeviceHandleType) String() string {
+	if p == 0xffff {
+		return "No cooling"
+	}
+	return strconv.Itoa(int(p))
+}
+
+type InputCurrentProbeHandleType uint16
+
+func (p InputCurrentProbeHandleType) String() string {
+	if p == 0xffff {
+		return "No current probe"
+	}
+	return strconv.Itoa(int(p))
+}
+
 type SystemPowerSupply struct {
 	infoCommon
 	PowerUnitGroup             byte
@@ -137,13 +174,43 @@ type SystemPowerSupply struct {
 	AssetTagNumber             string
 	ModelPartNumber            string
 	RevisionLevel              string
-	MaxPowerCapacity           uint16
+	MaxPowerCapacity           MaxPowerCapacityType
 	PowerSupplyCharacteristics SystemPowerSupplyCharacteristics
-	InputVoltageProbeHandle    uint16
-	CoolingDeviceHandle        uint16
-	InputCurrentProbeHandle    uint16
+	InputVoltageProbeHandle    InputVoltageProbeHandleType
+	CoolingDeviceHandle        CoolingDeviceHandleType
+	InputCurrentProbeHandle    InputCurrentProbeHandleType
 }
 
+func newSystemPowerSupply(h dmiHeader) dmiTyper {
+	data := h.data
+	s := &SystemPowerSupply{
+		PowerUnitGroup:             data[0x04],
+		Location:                   h.FieldString(int(data[0x05])),
+		DeviceName:                 h.FieldString(int(data[0x06])),
+		Manufacturer:               h.FieldString(int(data[0x07])),
+		SerialNumber:               h.FieldString(int(data[0x08])),
+		AssetTagNumber:             h.FieldString(int(data[0x09])),
+		ModelPartNumber:            h.FieldString(int(data[0x0A])),
+		RevisionLevel:              h.FieldString(int(data[0x0B])),
+		MaxPowerCapacity:           MaxPowerCapacityType(u16(data[0x0C:0x0E])),
+		PowerSupplyCharacteristics: newSystemPowerSupplyCharacteristics(u16(data[0x00E:0x10])),
+		InputVoltageProbeHandle:    InputVoltageProbeHandleType(u16(data[0x10:0x12])),
+		CoolingDeviceHandle:        CoolingDeviceHandleType(u16(data[0x12:0x14])),
+		InputCurrentProbeHandle:    InputCurrentProbeHandleType(u16(data[0x014:0x16])),
+	}
+	SystemPowerSupplys = append(SystemPowerSupplys, s)
+	return s
+}
+
+var SystemPowerSupplys []*SystemPowerSupply
+
+func GetSystemPowerSupplyInformation() string {
+	var ret string
+	for i, v := range SystemPowerSupplys {
+		ret += "\n SystemPowerSupply Infomation index:" + strconv.Itoa(i) + "\n" + v.String()
+	}
+	return ret
+}
 func (s SystemPowerSupply) String() string {
 	return fmt.Sprintf("System Power Supply\n"+
 		"\tPower Unit Group: %d\n"+
@@ -154,11 +221,11 @@ func (s SystemPowerSupply) String() string {
 		"\tAsset Tag Number: %s\n"+
 		"\tModel Part Number: %s\n"+
 		"\tRevision Level: %s\n"+
-		"\tMax Power Capacity: %d\n"+
+		"\tMax Power Capacity: %s W\n"+
 		"\tPower Supply Characteristics: %s\n"+
-		"\tInput Voltage Probe Handle: %d\n"+
-		"\tCooling Device Handle: %d\n"+
-		"\tInput Current Probe Handle: %d",
+		"\tInput Voltage Probe Handle: %s\n"+
+		"\tCooling Device Handle: %s\n"+
+		"\tInput Current Probe Handle: %s",
 		s.PowerUnitGroup,
 		s.Location,
 		s.DeviceName,
@@ -172,4 +239,8 @@ func (s SystemPowerSupply) String() string {
 		s.InputVoltageProbeHandle,
 		s.CoolingDeviceHandle,
 		s.InputCurrentProbeHandle)
+}
+
+func init() {
+	addTypeFunc(SMBIOSStructureTypePowerSupply, newSystemPowerSupply)
 }
