@@ -921,6 +921,10 @@ func newProcessorInformation(h dmiHeader) dmiTyper {
 
 var ProcessorInformations []*ProcessorInformation
 
+func Processor() []*ProcessorInformation {
+	return ProcessorInformations
+}
+
 func GetProcessorInformation() string {
 	var ret string
 	for i, v := range ProcessorInformations {
