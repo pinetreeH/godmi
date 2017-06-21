@@ -204,6 +204,10 @@ func newSystemPowerSupply(h dmiHeader) dmiTyper {
 
 var SystemPowerSupplys []*SystemPowerSupply
 
+func SystemPowerSupplyInformation() []*SystemPowerSupply {
+	return SystemPowerSupplys
+}
+
 func GetSystemPowerSupplyInformation() string {
 	var ret string
 	for i, v := range SystemPowerSupplys {
