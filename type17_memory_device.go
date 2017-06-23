@@ -273,6 +273,10 @@ func newMemoryDevice(h dmiHeader) dmiTyper {
 
 var MemoryDevices []*MemoryDevice
 
+func MemoryDeviceInfo() []*MemoryDevice {
+	return MemoryDevices
+}
+
 func GetMemoryDevice() string {
 	var ret string
 	for i, v := range MemoryDevices {
