@@ -650,6 +650,27 @@ func (p ProcessorStatus) String() string {
 	return ret
 }
 
+func (p ProcessorStatus) StringList() []string {
+	// Bits 2:0
+	status := [...]string{
+		"Unknown", // 0
+		"CPU Enabled",
+		"Disabled By User through BIOS Setup",
+		"Disabled By BIOSa(POST Error)",
+		"CPU is Idle, waiting to be enabled",
+		"Reserved",
+		"Reserved",
+		"Other",
+	}
+	var ret []string
+	ret = append(ret, status[p&0x07])
+
+	if p&0x40 != 0 {
+		ret = append(ret, "CPU Socket Polulated")
+	}
+	return ret
+}
+
 type ProcessorUpgrade byte
 
 const (
@@ -804,6 +825,27 @@ func (p ProcessorCharacteristics) String() string {
 	for i := uint(0); i < 8; i++ {
 		if p&(1<<i) != 0 {
 			s += "\n\t\t" + chars[i]
+		}
+	}
+	return s
+}
+
+func (p ProcessorCharacteristics) StringList() []string {
+	chars := [...]string{
+		"Reserved",
+		"Unknown",
+		"64-bit Capable",
+		"Multi-Core",
+		"Hardware Thread",
+		"Execute Protection",
+		"Enhanced Virtualization",
+		"Power/Performance Control",
+		// Bits 8:15 reserved
+	}
+	var s []string
+	for i := uint(0); i < 8; i++ {
+		if p&(1<<i) != 0 {
+			s = append(s, chars[i])
 		}
 	}
 	return s

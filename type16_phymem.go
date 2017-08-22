@@ -147,6 +147,10 @@ func newPhysicalMemoryArray(h dmiHeader) dmiTyper {
 
 var PhysicalMemoryArrays []*PhysicalMemoryArray
 
+func GetPhysicalMemory() *PhysicalMemoryArray {
+	return PhysicalMemoryArrays[0]
+}
+
 func GetPhysicalMemoryArray() string {
 	var ret string
 	for i, v := range PhysicalMemoryArrays {
