@@ -256,7 +256,6 @@ func (e entryPoint) StructureTable() error {
 	for hd := newdmiHeader(tmem); hd != nil; hd = hd.Next() {
 		err := hd.decode()
 		if err != nil {
-			fmt.Println("info: ", err)
 			continue
 		}
 	}
